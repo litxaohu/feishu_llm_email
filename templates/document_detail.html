@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>文档详情</title>
+  <style>
+    :root {
+      --bg: #07111f;
+      --panel: rgba(15, 28, 48, 0.86);
+      --border: rgba(98, 140, 255, 0.18);
+      --text: #e8f0ff;
+      --muted: #8fa8d6;
+      --accent: #5cc8ff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, "PingFang SC", "Microsoft YaHei", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(92, 200, 255, 0.16), transparent 24%),
+        linear-gradient(180deg, #07111f 0%, #050b16 100%);
+      min-height: 100vh;
+    }
+    .shell { max-width: 1320px; margin: 0 auto; padding: 28px; }
+    .card {
+      background: linear-gradient(180deg, var(--panel) 0%, rgba(11, 21, 38, 0.94) 100%);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 18px;
+      margin-bottom: 18px;
+      box-shadow: 0 16px 48px rgba(0, 0, 0, 0.35);
+    }
+    .hero { display: flex; justify-content: space-between; gap: 18px; align-items: center; margin-bottom: 18px; }
+    .hero h1 { margin: 0; }
+    .meta-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .meta-item { padding: 12px; border-radius: 14px; border: 1px solid rgba(129, 155, 255, 0.16); background: rgba(5, 14, 25, 0.48); }
+    .meta-item .label { color: var(--muted); font-size: 12px; margin-bottom: 6px; }
+    pre {
+      white-space: pre-wrap;
+      border: 1px solid rgba(129, 155, 255, 0.16);
+      background: rgba(3, 10, 20, 0.55);
+      padding: 14px;
+      border-radius: 14px;
+      color: var(--text);
+    }
+    input[type="text"], textarea {
+      width: 100%;
+      border-radius: 12px;
+      border: 1px solid rgba(129, 155, 255, 0.22);
+      background: rgba(9, 18, 32, 0.85);
+      color: var(--text);
+      padding: 12px 14px;
+      outline: none;
+    }
+    textarea { min-height: 240px; }
+    button, a.button-link {
+      border: none;
+      border-radius: 12px;
+      padding: 10px 15px;
+      background: linear-gradient(135deg, var(--accent) 0%, #7d6bff 100%);
+      color: white;
+      text-decoration: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .toolbar { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+    .chunk { margin-bottom: 14px; }
+    .flash { margin-bottom: 18px; padding: 12px 16px; border-radius: 12px; background: rgba(92, 200, 255, 0.08); border: 1px solid rgba(92, 200, 255, 0.22); }
+    @media (max-width: 900px) { .meta-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="shell">
+  <div class="hero">
+    <div>
+      <a class="button-link" href="/">返回控制中心</a>
+      <h1>文档 #{{ doc.id }}</h1>
+    </div>
+  </div>
+  {% if message %}
+  <div class="flash">{{ message }}</div>
+  {% endif %}
+
+  <div class="card">
+    <div class="meta-grid">
+      <div class="meta-item"><div class="label">标题</div><div>{{ doc.title }}</div></div>
+      <div class="meta-item"><div class="label">来源类型</div><div>{{ doc.source_type }}</div></div>
+      <div class="meta-item"><div class="label">来源</div><div>{{ doc.source_ref }}</div></div>
+      <div class="meta-item"><div class="label">状态</div><div>{{ doc.status }}</div></div>
+      <div class="meta-item"><div class="label">切片数</div><div>{{ doc.chunk_count }}</div></div>
+      <div class="meta-item"><div class="label">短期记忆重建次数</div><div>{{ doc.short_memory_rebuild_count }}</div></div>
+      <div class="meta-item"><div class="label">错误</div><div>{{ doc.error_message or "" }}</div></div>
+      <div class="meta-item"><div class="label">创建时间</div><div>{{ doc.created_at }}</div></div>
+      <div class="meta-item"><div class="label">更新时间</div><div>{{ doc.updated_at }}</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>原始正文</h3>
+    <pre>{{ doc.content }}</pre>
+  </div>
+
+  <div class="card">
+    <h3>编辑并重新分析</h3>
+    <form action="/documents/{{ doc.id }}/update" method="post">
+      <div class="toolbar">
+        <button type="submit">保存并重新生成短期记忆</button>
+      </div>
+      <div>
+        <label>标题</label><br />
+        <input type="text" name="title" value="{{ doc.title }}" required />
+      </div>
+      <div>
+        <label>来源</label><br />
+        <input type="text" name="source_ref" value="{{ doc.source_ref }}" required />
+      </div>
+      <div>
+        <label>正文</label><br />
+        <textarea name="content" rows="12" required>{{ doc.content }}</textarea>
+      </div>
+    </form>
+  </div>
+
+  <div class="card">
+    <h3>切片内容</h3>
+    {% for c in doc.chunks %}
+    <div class="chunk">
+      <strong>Chunk {{ c.chunk_index }}</strong>
+      <pre>{{ c.chunk_text }}</pre>
+    </div>
+    {% endfor %}
+  </div>
+  </div>
+</body>
+</html>

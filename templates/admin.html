@@ -1,0 +1,476 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>XiaoHu Control Center</title>
+  <style>
+    :root {
+      --bg: #07111f;
+      --panel: rgba(15, 28, 48, 0.86);
+      --panel-2: rgba(11, 21, 38, 0.94);
+      --border: rgba(98, 140, 255, 0.18);
+      --text: #e8f0ff;
+      --muted: #8fa8d6;
+      --accent: #5cc8ff;
+      --accent-2: #7d6bff;
+      --success: #2ad39b;
+      --warn: #f2b94b;
+      --danger: #ff6b81;
+      --shadow: 0 16px 48px rgba(0, 0, 0, 0.35);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, "PingFang SC", "Microsoft YaHei", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(92, 200, 255, 0.16), transparent 24%),
+        radial-gradient(circle at top right, rgba(125, 107, 255, 0.16), transparent 26%),
+        linear-gradient(180deg, #07111f 0%, #050b16 100%);
+      min-height: 100vh;
+    }
+    .shell { max-width: 1500px; margin: 0 auto; padding: 28px; }
+    .hero {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      align-items: flex-end;
+      margin-bottom: 22px;
+    }
+    .hero h1 { margin: 0; font-size: 32px; letter-spacing: 0.02em; }
+    .hero p { margin: 10px 0 0; color: var(--muted); max-width: 760px; }
+    .badge {
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(92, 200, 255, 0.08);
+      color: var(--accent);
+      font-size: 13px;
+    }
+    .flash {
+      margin-bottom: 18px;
+      padding: 12px 16px;
+      border-radius: 12px;
+      border: 1px solid rgba(92, 200, 255, 0.22);
+      background: rgba(92, 200, 255, 0.08);
+      color: #dff6ff;
+    }
+    .grid-top {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+    .card {
+      background: linear-gradient(180deg, var(--panel) 0%, var(--panel-2) 100%);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 18px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+    }
+    .card h2, .card h3 { margin: 0 0 14px; }
+    .subtext { color: var(--muted); font-size: 14px; margin-bottom: 16px; }
+    .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+    .stack { display: flex; flex-direction: column; gap: 12px; }
+    input[type="text"], input[type="number"], textarea, select, input[type="file"] {
+      width: 100%;
+      border-radius: 12px;
+      border: 1px solid rgba(129, 155, 255, 0.22);
+      background: rgba(9, 18, 32, 0.85);
+      color: var(--text);
+      padding: 12px 14px;
+      outline: none;
+    }
+    textarea { min-height: 180px; resize: vertical; }
+    .compact-textarea { min-height: 96px; }
+    button, .button-link {
+      border: none;
+      border-radius: 12px;
+      padding: 10px 15px;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+      color: white;
+      cursor: pointer;
+      font-weight: 600;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 40px;
+    }
+    button.secondary, .button-link.secondary {
+      background: rgba(111, 137, 194, 0.16);
+      border: 1px solid rgba(111, 137, 194, 0.22);
+      color: var(--text);
+    }
+    button.danger {
+      background: linear-gradient(135deg, rgba(255, 107, 129, 0.9), rgba(255, 69, 114, 0.9));
+    }
+    .toolbar { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 14px; }
+    .filters { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .filters select { min-width: 180px; }
+    .table-wrap { overflow: auto; border-radius: 16px; border: 1px solid rgba(129, 155, 255, 0.16); }
+    table { width: 100%; border-collapse: collapse; min-width: 980px; }
+    th, td { padding: 12px 12px; border-bottom: 1px solid rgba(129, 155, 255, 0.1); text-align: left; vertical-align: top; }
+    th { background: rgba(255, 255, 255, 0.03); color: #c5d8ff; font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; }
+    tr:hover td { background: rgba(255, 255, 255, 0.02); }
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      border: 1px solid transparent;
+    }
+    .status-ready, .status-succeeded { color: var(--success); background: rgba(42, 211, 155, 0.12); border-color: rgba(42, 211, 155, 0.24); }
+    .status-processing, .status-running, .status-pending { color: var(--warn); background: rgba(242, 185, 75, 0.1); border-color: rgba(242, 185, 75, 0.2); }
+    .status-paused { color: #b89cff; background: rgba(184, 156, 255, 0.12); border-color: rgba(184, 156, 255, 0.24); }
+    .status-failed { color: var(--danger); background: rgba(255, 107, 129, 0.12); border-color: rgba(255, 107, 129, 0.24); }
+    .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .pagination { display: flex; gap: 8px; align-items: center; justify-content: flex-end; margin-top: 14px; flex-wrap: wrap; }
+    .pagination .page-info { color: var(--muted); font-size: 13px; margin-right: auto; }
+    .chat-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .chat-box {
+      min-height: 280px;
+      white-space: pre-wrap;
+      border-radius: 16px;
+      border: 1px solid rgba(129, 155, 255, 0.18);
+      padding: 16px;
+      background: rgba(3, 10, 20, 0.55);
+      overflow: auto;
+    }
+    .micro { font-size: 12px; color: var(--muted); }
+    .section-title { display:flex; justify-content: space-between; align-items:center; gap: 12px; margin-bottom: 12px; }
+    .top-actions { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    .top-actions .card { min-height: 170px; }
+    .divider {
+      height: 1px;
+      background: rgba(129, 155, 255, 0.16);
+      margin: 10px 0;
+    }
+    .status-saved { color: var(--accent); background: rgba(92, 200, 255, 0.12); border-color: rgba(92, 200, 255, 0.24); }
+    .doc-title-row { display: flex; align-items: center; gap: 8px; min-width: 0; }
+    .doc-title-text, .doc-source-text {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      display: block;
+      max-width: 280px;
+    }
+    .doc-source-text { max-width: 320px; }
+    .copy-btn {
+      min-height: 28px;
+      padding: 4px 8px;
+      font-size: 12px;
+      border-radius: 8px;
+      background: rgba(111, 137, 194, 0.16);
+      border: 1px solid rgba(111, 137, 194, 0.22);
+      color: var(--text);
+      flex: 0 0 auto;
+    }
+    .actions { display: flex; gap: 8px; flex-wrap: nowrap; align-items: center; }
+    .actions form { margin: 0; }
+    .actions button, .actions .button-link {
+      min-height: 34px;
+      padding: 7px 12px;
+      white-space: nowrap;
+    }
+    .task-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .task-actions form { margin: 0; }
+    @media (max-width: 1100px) {
+      .grid-top, .chat-layout, .top-actions { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="hero">
+      <div>
+        <div class="badge">XiaoHu Knowledge Ops Console</div>
+        <h1>知识库与 AI 控制中心</h1>
+        <p>支持 Markdown / URL / AI 对话收录、批量筛选与管理、记忆重建、任务监控，以及 Web 端智能对话。</p>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:10px; align-items:flex-end;">
+        <a class="button-link" href="/chat">进入 AI 对话窗口</a>
+        <div class="micro">任务分页：每页 10 条 | 文档筛选：来源类型 + 重建次数</div>
+      </div>
+    </div>
+
+    {% if message %}
+    <div class="flash">{{ message }}</div>
+    {% endif %}
+
+    <div class="top-actions">
+      <div class="card">
+        <h3>上传 Markdown</h3>
+        <div class="subtext">用于导入 FAQ、案例、说明文档并进入后台队列，导入后会直接构建记忆。</div>
+        <form action="/upload-md" method="post" enctype="multipart/form-data" class="stack">
+          <input type="file" name="file" accept=".md" required />
+          <button type="submit">上传并入队</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h3>上传 HTML 邮件</h3>
+        <div class="subtext">支持直接上传 HTML 文件，或输入邮件链接先下载、预览，再确认解析为 Markdown。</div>
+        <form action="/upload-html" method="post" enctype="multipart/form-data" class="stack">
+          <div class="micro">方式一：直接上传本地 HTML 文件</div>
+          <input type="file" name="file" accept=".html" required />
+          <textarea class="compact-textarea" name="description" placeholder="填写该邮件案例的主要功能、问题背景或处理要点，后续建立记忆时会一并纳入"></textarea>
+          <button type="submit">解析并保存</button>
+        </form>
+        <div class="divider"></div>
+        <form action="/download-html" method="post" class="stack">
+          <div class="micro">方式二：输入邮件链接，先下载 HTML，再进入预览确认页</div>
+          <input type="text" name="html_url" placeholder="输入 HTML 邮件页面链接，例如 https://example.com/ticket/123" required />
+          <textarea class="compact-textarea" name="description" placeholder="可先填写邮件案例说明，下载后会自动带入确认页"></textarea>
+          <button type="submit">下载 HTML</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h3>添加 URL</h3>
+        <div class="subtext">抓取 URL 正文并自动切片、构建记忆。</div>
+        <form action="/add-url" method="post" class="stack">
+          <input type="text" name="url" placeholder="https://example.com/article" required />
+          <button type="submit">抓取并入队</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h3>长期记忆控制</h3>
+        <div class="subtext">手动触发全量长期记忆重建，适合批量更新后执行。</div>
+        <form action="/memories/rebuild-long" method="post" class="stack">
+          <button type="submit">全量重建长期记忆</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="grid-top">
+      <div class="card">
+        <div class="section-title">
+          <div>
+            <h2>文档队列与批量管理</h2>
+            <div class="subtext">支持按来源类型、短期记忆重建次数筛选，并统一批量删除或重建。</div>
+          </div>
+        </div>
+        <form method="get" action="/" class="toolbar">
+          <div class="filters">
+            <select name="source_type">
+              <option value="">全部来源</option>
+              {% for source in source_types %}
+              <option value="{{ source }}" {% if selected_source_type == source %}selected{% endif %}>{{ source_type_labels.get(source, source) }}</option>
+              {% endfor %}
+            </select>
+            <input type="text" name="title_keyword" value="{{ selected_title_keyword }}" placeholder="按标题搜索" style="max-width: 220px;" />
+            <input type="number" min="0" name="rebuild_count" value="{{ selected_rebuild_count }}" placeholder="输入重建次数" style="max-width: 180px;" />
+            <input type="hidden" name="tasks_page" value="{{ tasks_page }}" />
+            <button type="submit" class="secondary">筛选</button>
+            <a class="button-link secondary" href="/">重置</a>
+          </div>
+          <div class="micro">文档页码：{{ docs_page }}/{{ docs_total_pages }}</div>
+        </form>
+
+        <form action="/documents/bulk" method="post">
+          <input type="hidden" name="source_type" value="{{ selected_source_type }}" />
+          <input type="hidden" name="rebuild_count" value="{{ selected_rebuild_count }}" />
+          <input type="hidden" name="title_keyword" value="{{ selected_title_keyword }}" />
+          <input type="hidden" name="rebuild_long_memory" value="false" />
+          <div class="toolbar">
+            <div class="actions">
+              <button type="submit" name="action" value="bulk_reindex" class="secondary">批量重建短期记忆</button>
+              <button type="submit" name="action" value="bulk_delete" class="danger" onclick="return prepareBulkDelete(this.form)">批量删除</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th><input type="checkbox" onclick="document.querySelectorAll('.doc-check').forEach(cb => cb.checked = this.checked)" /></th>
+                  <th>ID</th>
+                  <th>标题</th>
+                  <th>来源类型</th>
+                  <th>状态</th>
+                  <th>切片数</th>
+                  <th>重建次数</th>
+                  <th>更新时间</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for doc in documents %}
+                <tr>
+                  <td><input class="doc-check" type="checkbox" name="selected_document_ids" value="{{ doc.id }}" /></td>
+                  <td>{{ doc.id }}</td>
+                  <td>
+                    <div class="doc-title-row">
+                      <span class="doc-title-text" title="{{ doc.title }}">{{ doc.title }}</span>
+                      <button class="copy-btn" type="button" data-copy="{{ doc.title }}" onclick="copyText(this.dataset.copy)">复制</button>
+                    </div>
+                    <div class="micro doc-source-text" title="{{ doc.source_ref }}">{{ doc.source_ref }}</div>
+                  </td>
+                  <td>{{ source_type_labels.get(doc.source_type, doc.source_type) }}</td>
+                  <td><span class="status-pill status-{{ doc.status }}">{{ doc.status }}</span></td>
+                  <td>{{ doc.chunk_count }}</td>
+                  <td>{{ doc.short_memory_rebuild_count }}</td>
+                  <td>{{ doc.updated_at }}</td>
+                  <td>
+                    <div class="actions">
+                      <form action="/documents/{{ doc.id }}/reindex" method="post">
+                        <button type="submit" class="secondary">重建</button>
+                      </form>
+                      <form action="/documents/{{ doc.id }}/delete" method="post">
+                        <input type="hidden" name="rebuild_long_memory" value="false" />
+                        <button type="submit" class="danger" onclick="return prepareDelete(this.form)">删除</button>
+                      </form>
+                      <a class="button-link secondary" href="/documents/{{ doc.id }}">详情</a>
+                    </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </form>
+        <div class="pagination">
+          <div class="page-info">当前展示 {{ documents|length }} 条记录</div>
+          {% if docs_page > 1 %}
+          <a class="button-link secondary" href="/?docs_page={{ docs_page - 1 }}&tasks_page={{ tasks_page }}&source_type={{ selected_source_type }}&rebuild_count={{ selected_rebuild_count }}&title_keyword={{ selected_title_keyword }}">上一页</a>
+          {% endif %}
+          <span class="micro">第 {{ docs_page }} / {{ docs_total_pages }} 页</span>
+          {% if docs_page < docs_total_pages %}
+          <a class="button-link secondary" href="/?docs_page={{ docs_page + 1 }}&tasks_page={{ tasks_page }}&source_type={{ selected_source_type }}&rebuild_count={{ selected_rebuild_count }}&title_keyword={{ selected_title_keyword }}">下一页</a>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">
+          <div>
+            <h2>AI 对话入口</h2>
+            <div class="subtext">点击进入独立页面进行 AI 对话，适合更聚焦地测试普通问答、`[邮件]` 和 `[案例贡献]` 指令。</div>
+          </div>
+        </div>
+        <div class="stack">
+          <a class="button-link" href="/chat">打开独立对话窗口</a>
+          <div class="chat-box">独立对话页可获得更大的输入输出区域，避免影响文档与任务管理视图。</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">
+        <div>
+          <h2>任务队列状态</h2>
+          <div class="subtext">每页显示 10 条任务记录，可查看历史处理状态、进度与消息。</div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>任务类型</th>
+              <th>文档ID</th>
+              <th>状态</th>
+              <th>进度</th>
+              <th>消息</th>
+              <th>创建时间</th>
+              <th>开始时间</th>
+              <th>结束时间</th>
+              <th>控制</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for task in tasks %}
+            <tr>
+              <td>{{ task.id }}</td>
+              <td>{{ task.task_type }}</td>
+              <td>{{ task.document_id or "" }}</td>
+              <td><span class="status-pill status-{{ task.status }}">{{ task.status }}</span></td>
+              <td>{{ task.progress }}%</td>
+              <td>{{ task.message or "" }}</td>
+              <td>{{ task.created_at }}</td>
+              <td>{{ task.started_at or "" }}</td>
+              <td>{{ task.finished_at or "" }}</td>
+              <td>
+                <div class="task-actions">
+                  {% if task.status in ["pending", "running"] %}
+                  <form action="/tasks/{{ task.id }}/pause" method="post">
+                    <button type="submit" class="secondary">暂停</button>
+                  </form>
+                  {% endif %}
+                  {% if task.status == "paused" %}
+                  <form action="/tasks/{{ task.id }}/resume" method="post">
+                    <button type="submit" class="secondary">继续</button>
+                  </form>
+                  {% endif %}
+                  {% if task.status != "running" %}
+                  <form action="/tasks/{{ task.id }}/delete" method="post">
+                    <button type="submit" class="danger" onclick="return confirm('确认删除该任务记录吗？')">删除</button>
+                  </form>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="pagination">
+        <div class="page-info">当前展示 {{ tasks|length }} 条任务</div>
+        {% if tasks_page > 1 %}
+        <a class="button-link secondary" href="/?docs_page={{ docs_page }}&tasks_page={{ tasks_page - 1 }}&source_type={{ selected_source_type }}&rebuild_count={{ selected_rebuild_count }}&title_keyword={{ selected_title_keyword }}">上一页</a>
+        {% endif %}
+        <span class="micro">第 {{ tasks_page }} / {{ tasks_total_pages }} 页</span>
+        {% if tasks_page < tasks_total_pages %}
+        <a class="button-link secondary" href="/?docs_page={{ docs_page }}&tasks_page={{ tasks_page + 1 }}&source_type={{ selected_source_type }}&rebuild_count={{ selected_rebuild_count }}&title_keyword={{ selected_title_keyword }}">下一页</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <script>
+    async function copyText(value) {
+      try {
+        await navigator.clipboard.writeText(value);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    function askRebuildLongMemory() {
+      const proceedDelete = confirm('确认删除相关文档内容吗？');
+      if (!proceedDelete) {
+        return null;
+      }
+      const rebuildLong = confirm('是否在删除后立即重建长期记忆？\n点击“确定”会重建，点击“取消”则只删除文档。');
+      return rebuildLong;
+    }
+
+    function prepareDelete(form) {
+      const rebuildLong = askRebuildLongMemory();
+      if (rebuildLong === null) {
+        return false;
+      }
+      form.querySelector('input[name="rebuild_long_memory"]').value = rebuildLong ? 'true' : 'false';
+      return true;
+    }
+
+    function prepareBulkDelete(form) {
+      const checked = form.querySelectorAll('.doc-check:checked');
+      if (!checked.length) {
+        alert('请先选择文档');
+        return false;
+      }
+      const rebuildLong = askRebuildLongMemory();
+      if (rebuildLong === null) {
+        return false;
+      }
+      form.querySelector('input[name="rebuild_long_memory"]').value = rebuildLong ? 'true' : 'false';
+      return true;
+    }
+  </script>
+</body>
+</html>
